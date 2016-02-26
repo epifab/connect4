@@ -16,10 +16,10 @@
  */
 package connect4.gui;
 
-import connect4.MVP.BoardSlot;
-import connect4.MVP.MatchModel;
-import connect4.MVP.MatchPresenter;
-import connect4.MVP.MatchView;
+import connect4.mvp.BoardSlot;
+import connect4.mvp.MatchModel;
+import connect4.mvp.MatchPresenter;
+import connect4.mvp.MatchView;
 import javax.swing.GroupLayout;
 
 public class Match extends javax.swing.JFrame implements MatchView {
