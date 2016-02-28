@@ -16,7 +16,7 @@
  */
 package connect4.gui;
 
-import connect4.mvp.BoardSlot;
+import connect4.mvp.Point;
 import connect4.mvp.MatchModel;
 import connect4.mvp.MatchPresenter;
 import connect4.mvp.MatchView;
@@ -45,7 +45,6 @@ public class Match extends javax.swing.JFrame implements MatchView {
   protected javax.swing.JButton[] commands;
 
   protected javax.swing.JPanel matchInfoPanel;
-  protected javax.swing.JLabel lblMatchName;
   protected javax.swing.JLabel lblPlayer1;
   protected javax.swing.JLabel lblPlayer1Name;
   protected javax.swing.JLabel lblPlayer2;
@@ -80,21 +79,21 @@ public class Match extends javax.swing.JFrame implements MatchView {
   }
 
   @Override
-  public void makeMove(int playerId, int x, int y) {
+  public void makeMove(int player, Point point) {
     javax.swing.Icon playerIco;
 
-    playerIco = playerId == 1 ? this.iPiece1 : this.iPiece2;
-    this.board[y][x].setIcon(playerIco);
+    playerIco = player == 1 ? this.iPiece1 : this.iPiece2;
+    this.board[point.row][point.column].setIcon(playerIco);
   }
 
   @Override
-  public void show(MatchModel model) {
+  public void newMatch(MatchModel model) {
     this.initComponents(model);
     
-    this.lblPlayer1Name.setText(model.player1.getName());
-    this.lblPlayer2Name.setText(model.player2.getName());
+    this.lblPlayer1Name.setText(model.player1);
+    this.lblPlayer2Name.setText(model.player2);
     
-    if (model.currentPlayerId == 1) {
+    if (model.currentPlayer == 1) {
       this.lblPlayer1Name.setIcon(iPiece1Small);
       this.lblPlayer2Name.setIcon(iPiece0Small);
     }
@@ -103,11 +102,11 @@ public class Match extends javax.swing.JFrame implements MatchView {
       this.lblPlayer2Name.setIcon(iPiece2Small);
     }
 
-    for (int y = 0; y < model.columns; y++) {
-      this.commands[y].setEnabled(true);
+    for (int column = 0; column < model.board.columns; column++) {
+      this.commands[column].setEnabled(true);
 
-      for (int x = 0; x < model.rows; x++) {
-        this.board[x][y].setIcon(iPiece0);
+      for (int row = 0; row < model.board.rows; row++) {
+        this.board[row][column].setIcon(iPiece0);
       }
     }
   }
@@ -118,8 +117,8 @@ public class Match extends javax.swing.JFrame implements MatchView {
   }
 
   @Override
-  public void setCurrentPlayerId(int playerId) {
-    if (playerId == 1) {
+  public void setCurrentPlayer(int player) {
+    if (player == 1) {
       lblPlayer1Name.setIcon(iPiece1Small);
       lblPlayer2Name.setIcon(iPiece0Small);
     }
@@ -130,17 +129,17 @@ public class Match extends javax.swing.JFrame implements MatchView {
   }
 
   @Override
-  public void endMatch(int playerId, BoardSlot[] fourInALine) throws IllegalArgumentException {
+  public void endMatch(int player, Point[] connected) throws IllegalArgumentException {
     javax.swing.Icon winnerIco;
 
-    winnerIco = playerId == 1 ? iPiece1Winner : iPiece2Winner;
+    winnerIco = player == 1 ? iPiece1Winner : iPiece2Winner;
 
-    this.board[fourInALine[0].y][fourInALine[0].x].setIcon(winnerIco);
-    this.board[fourInALine[1].y][fourInALine[1].x].setIcon(winnerIco);
-    this.board[fourInALine[2].y][fourInALine[2].x].setIcon(winnerIco);
-    this.board[fourInALine[3].y][fourInALine[3].x].setIcon(winnerIco);
+    this.board[connected[0].row][connected[0].column].setIcon(winnerIco);
+    this.board[connected[1].row][connected[1].column].setIcon(winnerIco);
+    this.board[connected[2].row][connected[2].column].setIcon(winnerIco);
+    this.board[connected[3].row][connected[3].column].setIcon(winnerIco);
 
-    if (playerId == 1) {
+    if (player == 1) {
       this.lblPlayer1Name.setIcon(iPiece1WinnerSmall);
       this.lblPlayer2Name.setIcon(iPiece0Small);
     }
@@ -171,7 +170,9 @@ public class Match extends javax.swing.JFrame implements MatchView {
   }
 
   protected void actionNew() {
-    this.presenter.init(true);
+    this.close();
+    Match newMatch = new Match();
+    newMatch.open();
   }
 
   protected void actionQuit() {
@@ -185,14 +186,13 @@ public class Match extends javax.swing.JFrame implements MatchView {
     javax.swing.Icon iCmdOff = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_CMDOFF));
     javax.swing.Icon iCmd = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_CMD));
 
-    board = new javax.swing.JLabel[model.rows][model.columns];
-    commands = new javax.swing.JButton[model.columns];
+    board = new javax.swing.JLabel[model.board.rows][model.board.columns];
+    commands = new javax.swing.JButton[model.board.columns];
 
     gridPanel = new javax.swing.JPanel();
     cmdPanel = new javax.swing.JPanel();
     matchInfoPanel = new javax.swing.JPanel();
 
-    lblMatchName = new javax.swing.JLabel();
     lblPlayer1 = new javax.swing.JLabel();
     lblPlayer1Name = new javax.swing.JLabel();
     lblPlayer2 = new javax.swing.JLabel();
@@ -211,7 +211,7 @@ public class Match extends javax.swing.JFrame implements MatchView {
     iPiece1Winner = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE1_WINNER));
     iPiece2Winner = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE2_WINNER));
 
-    for (j = 0; j < model.columns; j++) {
+    for (j = 0; j < model.board.columns; j++) {
       commands[j] = new javax.swing.JButton();
       commands[j].setIcon(iCmd);
       commands[j].setDisabledIcon(iCmdOff);
@@ -226,7 +226,7 @@ public class Match extends javax.swing.JFrame implements MatchView {
       });
       commands[j].setEnabled(false);
 
-      for (i = 0; i < model.rows; i++) {
+      for (i = 0; i < model.board.rows; i++) {
         board[i][j] = new javax.swing.JLabel();
         board[i][j].setIcon(iPieceDis);
       }
@@ -248,8 +248,6 @@ public class Match extends javax.swing.JFrame implements MatchView {
     cmdPanel.setLayout(cmdPanelLayout);
     matchInfoPanel.setLayout(matchInfoPanelLayout);
 
-    lblMatchName.setFont(new java.awt.Font("Tahoma", 0, 24));
-
     lblPlayer1.setText("Player 1:");
 
     lblPlayer1Name.setIcon(iPiece0Small);
@@ -262,27 +260,27 @@ public class Match extends javax.swing.JFrame implements MatchView {
     lblPlayer2Name.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
     lblPlayer2Name.setForeground(new java.awt.Color(255, 255, 0));
 
+    int matchInfoPanelLabelWidth = Math.round(33 * model.board.columns * 3 / 8);
+    int matchInfoPanelNameWidth = 33 * model.board.columns - matchInfoPanelLabelWidth;
+    
     matchInfoPanelLayout.setHorizontalGroup(
             matchInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(matchInfoPanelLayout.createSequentialGroup()
                     .addContainerGap()
                     .addGroup(matchInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(matchInfoPanelLayout.createSequentialGroup()
-                                    .addComponent(lblPlayer1, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(lblPlayer1, javax.swing.GroupLayout.PREFERRED_SIZE, matchInfoPanelLabelWidth, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(lblPlayer1Name, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(lblPlayer1Name, javax.swing.GroupLayout.PREFERRED_SIZE, matchInfoPanelNameWidth, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(lblPlayer2, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(lblPlayer2, javax.swing.GroupLayout.PREFERRED_SIZE, matchInfoPanelLabelWidth, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                    .addComponent(lblPlayer2Name, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(lblMatchName, javax.swing.GroupLayout.PREFERRED_SIZE, 487, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(lblPlayer2Name, javax.swing.GroupLayout.PREFERRED_SIZE, matchInfoPanelNameWidth, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addContainerGap(37, Short.MAX_VALUE))
     );
     matchInfoPanelLayout.setVerticalGroup(
             matchInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(matchInfoPanelLayout.createSequentialGroup()
-                    .addComponent(lblMatchName, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addGroup(matchInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(lblPlayer1)
                             .addComponent(lblPlayer1Name, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -292,11 +290,11 @@ public class Match extends javax.swing.JFrame implements MatchView {
     );
 
     GroupLayout.SequentialGroup cmdGroupSequential = cmdPanelLayout.createSequentialGroup();    
-    for (int x = 0; x < model.columns; x++) {
-      if (x > 0) {
+    for (int col = 0; col < model.board.columns; col++) {
+      if (col > 0) {
         cmdGroupSequential.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED);
       }
-      cmdGroupSequential.addComponent(commands[x], BUTTON_WIDTH, BUTTON_WIDTH, BUTTON_WIDTH);
+      cmdGroupSequential.addComponent(commands[col], BUTTON_WIDTH, BUTTON_WIDTH, BUTTON_WIDTH);
     }
     
     cmdPanelLayout.setHorizontalGroup(
@@ -309,8 +307,8 @@ public class Match extends javax.swing.JFrame implements MatchView {
     );
 
     GroupLayout.ParallelGroup cmdGroupParallel = cmdPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE);
-    for (int x = 0; x < model.columns; x++) {
-      cmdGroupParallel.addComponent(commands[x], BUTTON_HEIGHT, BUTTON_HEIGHT, BUTTON_HEIGHT);
+    for (int col = 0; col < model.board.columns; col++) {
+      cmdGroupParallel.addComponent(commands[col], BUTTON_HEIGHT, BUTTON_HEIGHT, BUTTON_HEIGHT);
     }
     
     cmdPanelLayout.setVerticalGroup(
@@ -323,14 +321,14 @@ public class Match extends javax.swing.JFrame implements MatchView {
 
     GroupLayout.ParallelGroup boardGroupParallel = gridPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING);
         
-    for (int y = model.rows - 1; y >= 0; y--) {
+    for (int row = model.board.rows - 1; row >= 0; row--) {
       GroupLayout.SequentialGroup rowGroup = gridPanelLayout.createSequentialGroup();
 
-      for (int x = 0; x < model.columns; x++) {
-        if (x > 0) {
+      for (int col = 0; col < model.board.columns; col++) {
+        if (col > 0) {
           rowGroup.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED);
         }
-        rowGroup.addComponent(board[y][x]);
+        rowGroup.addComponent(board[row][col]);
       }
       
       boardGroupParallel.addGroup(rowGroup);
@@ -348,11 +346,11 @@ public class Match extends javax.swing.JFrame implements MatchView {
     
     boardGroupSequential.addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE);
     
-    for (int y = model.rows - 1; y >= 0; y--) {
+    for (int row = model.board.rows - 1; row >= 0; row--) {
       GroupLayout.ParallelGroup rowGroup = gridPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE);
       
-      for (int x = 0; x < model.columns; x++) {
-        rowGroup.addComponent(board[y][x]);
+      for (int col = 0; col < model.board.columns; col++) {
+        rowGroup.addComponent(board[row][col]);
       }
       
       boardGroupSequential.addGroup(rowGroup);

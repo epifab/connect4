@@ -20,8 +20,12 @@ package connect4.mvp;
  *
  * @author fabio.epifani
  */
-public interface Player {
-  public String getName();
-  public boolean isAI();
-  public void makeMove(MatchPresenter controller, MatchModel model);
+public class Point {
+  public final int row;
+  public final int column;
+  
+  public Point(int row, int column) {
+    this.row = row;
+    this.column = column;
+  }
 }

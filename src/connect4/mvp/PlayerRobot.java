@@ -23,11 +23,19 @@ package connect4.mvp;
 public class PlayerRobot implements Player {
   private final String name = "Hal";
   
+  @Override
   public String getName() {
     return this.name;
   }
   
+  @Override
   public  boolean isAI() {
     return true;
+  }
+
+  @Override
+  public void makeMove(MatchPresenter match, MatchModel model) {
+    // AI logic here...
+    
   }
 }

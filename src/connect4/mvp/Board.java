@@ -20,12 +20,29 @@ package connect4.mvp;
  *
  * @author fabio.epifani
  */
-public class BoardSlot {
-  public final int x;
-  public final int y;
+public class Board {
+  public final int rows;
+  public final int columns;
+  private final int[][] board;
   
-  public BoardSlot(int x, int y) {
-    this.x = x;
-    this.y = y;
+  public Board(int rows, int columns) {
+    this.rows = rows;
+    this.columns = columns;
+    this.board = new int[rows][columns];
+    for (int row = 0; row < rows; row++) {
+      this.board[row] = new int[columns];
+    }
+  }
+  
+  public int get(Point point) {
+    return this.board[point.row][point.column];
+  }
+  
+  public int get(int row, int column) {
+    return this.board[row][column];
+  }
+  
+  void set(int row, int column, int playerId) {
+    this.board[row][column] = playerId;
   }
 }

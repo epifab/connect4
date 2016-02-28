@@ -21,89 +21,103 @@ package connect4.mvp;
  * @author fabio.epifani
  */
 public class MatchPresenter {
-  private MatchView view;
-  private MatchModel model;
+  private final int ROWS = 6;
+  private final int COLUMNS = 7;
+  private final MatchView view;
+  private final MatchModel model;
+  private final Player player1;
+  private final Player player2;
 
   public MatchPresenter(MatchView view) {
+    this(new PlayerHuman(), new PlayerRobot(), view);
+  }
+  
+  public MatchPresenter(Player player1, Player player2, MatchView view) {
+    this.player1 = player1;
+    this.player2 = player2;
     this.view = view;
+    this.model = new MatchModel(player1.getName(), player2.getName(), this.ROWS, this.COLUMNS);
   }
 
   public void init(boolean humanMovesFirst) {
-    Player human = new PlayerHuman();
-    Player robot = new PlayerRobot();
-
-    this.model = humanMovesFirst
-      ? new MatchModel(human, robot)
-      : new MatchModel(robot, human);
-
-    this.view.show(this.model);
+    this.view.newMatch(this.model);
   }
-
-  public void makeMove(int x) {
-    for (int y = 0; y < this.model.board[x].length; y++) {
-      if (this.model.board[x][y] == 0) {
-        makeMove(x, y);
-        return;
-      }
-    }
-
-    throw new IllegalArgumentException("Column is full");
-  }    
   
-  private void makeMove(int x, int y) {
-    boolean matchIsOver = false;
+  public void makeMove(int col) {
+    int currentPlayer = this.model.currentPlayer;
     
-    this.model.board[x][y] = this.model.currentPlayerId;
-
-    this.view.makeMove(this.model.currentPlayerId, x, y);
-
-    BoardSlot[] fourInALine = this.getFourInALine(x, y);
-    if (fourInALine != null) {
-      matchIsOver = true;
-      this.view.endMatch(this.model.board[x][y], fourInALine);
-    }
-
-    if (y == this.model.board[x].length - 1) {
-      // This column has now been filled up
-      this.view.disableColumn(x);
-
-      if (!matchIsOver) {
-        // If every column has been filled up, we have a tie
-        boolean allDisabled = true;
-
-        for (int i = 0; i < this.model.columns; i++) {
-          if (this.model.board[i][this.model.rows - 1] == 0) {
-            allDisabled = false;
-            break;
-          }
-        }
-
-        if (allDisabled) {
-          matchIsOver = true;
-          this.view.endMatch();
-        }
-      }
+    int row = this.getNextFreeSlot(col);
+    
+    if (row == -1) {
+      throw new IllegalArgumentException("Column is full");    
     }
     
-    if (!matchIsOver) {
-      this.model.currentPlayerId = this.model.currentPlayerId == 1 ? 2 : 1;
-      this.view.setCurrentPlayerId(this.model.currentPlayerId);
-      
-      Player currentPlayer = this.model.currentPlayerId == 1
-        ? this.model.player1
-        : this.model.player2;
-      
-      if (currentPlayer.isAI()) {
-        this.makeMoveAI();
-      }
+    // Updates the model
+    makeMove(row, col);
+    
+    this.view.makeMove(this.model.currentPlayer, new Point(row, col));
+    
+    switch (this.model.status) {
+      case Active:
+        this.view.makeMove(currentPlayer, new Point(row, col));
+        if (row == this.model.board.rows - 1) {
+          this.view.disableColumn(col);
+        }
+        this.view.setCurrentPlayer(this.model.currentPlayer);
+        break;
+        
+      case Tie:
+        this.view.endMatch();
+        break;
+        
+      case Winner:
+        this.view.endMatch(this.model.winner, this.model.connected);
+        break;
     }
+  }
+  
+  private void makeMove(int row, int column) {
+    this.model.board.set(row, column, this.model.currentPlayer);
+
+    // Winner detection
+    this.model.connected = this.getConnected(row, column);
+    
+    if (this.model.connected != null) {
+      this.model.status = MatchModel.Status.Winner;
+      this.model.winner = this.model.board.get(this.model.connected[0]);
+    }
+    
+    else if (this.isTie()) {
+      this.model.status = MatchModel.Status.Tie;
+    }
+    
+    this.model.currentPlayer = this.model.currentPlayer == 1 ? 2 : 1;
   }
   
   private void makeMoveAI() {
     // Artificial intelligence logic here...
+    
   }
   
-  private BoardSlot[] getFourInALine(int x, int y) {
+  int getNextFreeSlot(int column) {
+    for (int row = 0; row < this.model.board.rows; row++) {
+      if (this.model.board.get(row, column) == 0) {
+        return row;
+      }
+    }
+    return -1;
+  }
+  
+  private boolean isTie() {
+    for (int column = 0; column < this.model.board.rows; column++) {
+      if (this.model.board.get(this.model.board.rows - 1, column) == 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private Point[] getConnected(int row, int column) {
     boolean detected = false;
 
     int winColStart = 0;
@@ -117,26 +131,26 @@ public class MatchPresenter {
     int blCorner, trCorner;
     int i, n;
     
-    int playerId = this.model.board[x][y];
+    int playerId = this.model.board.get(row, column);
 
     if (playerId == 0) {
       return null;
     }
 
     n = 0;
-    minRow = y - 3;  // starting point
-    maxRow = y + 3;  // arriving point
+    minRow = row - 3;  // starting point
+    maxRow = row + 3;  // arriving point
 
     if (minRow < 0) {
       minRow = 0;
     }
-    if (maxRow >= this.model.rows) {
-      maxRow = this.model.rows - 1;
+    if (maxRow >= this.model.board.rows) {
+      maxRow = this.model.board.rows - 1;
     }
 
     // Search for a vertical "4 in a row" line
-    for (i = minRow; i <= y; i++) {
-      if (this.model.board[x][i] != playerId) {
+    for (i = minRow; i <= row; i++) {
+      if (this.model.board.get(i, column) != playerId) {
         // Checks whether it's still possible to close the match
         if (maxRow - i < 4) {
           break;
@@ -159,23 +173,23 @@ public class MatchPresenter {
     }
 
     if (detected) {
-      return this.createFourInALine(x, winRowStart, x, winRowStop);
+      return this.createConnected(winRowStart, column, winRowStop, column);
     }
 
     // Search for an horizontal "4 in a line"
     n = 0;
-    minCol = x - 3;
-    maxCol = x + 3;
+    minCol = column - 3;
+    maxCol = column + 3;
 
     if (minCol < 0) {
       minCol = 0;
     }
-    if (maxCol >= this.model.columns) {
-      maxCol = this.model.columns - 1;
+    if (maxCol >= this.model.board.columns) {
+      maxCol = this.model.board.columns - 1;
     }
 
     for (i = minCol; i <= maxCol; i++) {
-      if (this.model.board[i][y] != playerId) {
+      if (this.model.board.get(row, i) != playerId) {
         // Checks whether it's still possible to close the match
         if (maxCol - i < 4) {
           break;
@@ -197,9 +211,8 @@ public class MatchPresenter {
     }
 
     if (detected) {
-      return this.createFourInALine(winColStart, y, winColStop, y);
+      return this.createConnected(row, winColStart, row, winColStop);
     }
-
 
     /*
      * tlCorner: top left corner
@@ -207,10 +220,10 @@ public class MatchPresenter {
      * trCorner: top right corner
      * blCorner: bottom left corner
      */
-    tlCorner = Math.min(x - minCol, maxRow - y);
-    brCorner = Math.min(maxCol - x, y - minRow);
-    trCorner = Math.min(maxCol - x, maxRow - y);
-    blCorner = Math.min(x - minCol, y - minRow);
+    tlCorner = Math.min(column - minCol, maxRow - row);
+    brCorner = Math.min(maxCol - column, row - minRow);
+    trCorner = Math.min(maxCol - column, maxRow - row);
+    blCorner = Math.min(column - minCol, row - minRow);
 
     n = 0;
 
@@ -227,13 +240,13 @@ public class MatchPresenter {
      *   +---+---+---+---+---+---+
      */
     if (tlCorner + brCorner >= 3) {
-      minCol = x - tlCorner;
-      minRow = y + tlCorner;
+      minCol = column - tlCorner;
+      minRow = row + tlCorner;
 
       for (i = 0; i <= tlCorner + brCorner; i++) {
         // checking from left-to-right, top to bottom:
         // Increasing the column, decreasing the row
-        if (this.model.board[minCol + i][minRow - i] == playerId) {
+        if (this.model.board.get(minRow - i, minCol + i) == playerId) {
           n++;
           if (n == 1) {
             winRowStart = minRow - i;
@@ -256,7 +269,7 @@ public class MatchPresenter {
     }
     
     if (detected) {
-      return this.createFourInALine(winColStart, winRowStart, winColStop, winRowStop);
+      return this.createConnected(winRowStart, winColStart, winRowStop, winColStop);
     }
 
     /*
@@ -273,13 +286,13 @@ public class MatchPresenter {
      */
     if (trCorner + blCorner >= 3) {
       // aggiorno i valori di minCol e minRow
-      minCol = x - blCorner;
-      minRow = y - blCorner;
+      minCol = column - blCorner;
+      minRow = row - blCorner;
 
       for (i = 0; i <= blCorner + trCorner; i++) {
         // checking from left-to-right, bottom to top:
         // Increasing both column and row
-        if (this.model.board[minCol + i][minRow + i] == playerId) {
+        if (this.model.board.get(minRow + i, minCol + i) == playerId) {
           n++;
           if (n == 1) {
             winColStart = minCol + i;
@@ -300,37 +313,37 @@ public class MatchPresenter {
       }
     }
     if (detected) {
-      return this.createFourInALine(winColStart, winRowStart, winColStop, winRowStop);
+      return this.createConnected(winRowStart, winColStart, winRowStop, winColStop);
     }
 
     return null;
   }
 
-  private BoardSlot[] createFourInALine(int x1, int y1, int x2, int y2) {
-    BoardSlot[] slots = new BoardSlot[4];
+  private Point[] createConnected(int row1, int col1, int row2, int col2) {
+    Point[] slots = new Point[4];
 
-    int yIncrement = 0;
+    int colInc = 0;
     
-    if (y1 < y2) {
-      yIncrement = -1;
+    if (col1 < col2) {
+      colInc = -1;
     }
-    else if (y1 > y2) {
-      yIncrement = 1;
+    else if (col1 > col2) {
+      colInc = 1;
     }
     
-    int xIncrement = 0;
+    int rowInc = 0;
     
-    if (x1 < x2) {
-      xIncrement = -1;
+    if (row1 < row2) {
+      rowInc = -1;
     }
-    else if (x1 > x2) {
-      xIncrement = 1;
+    else if (row1 > row2) {
+      rowInc = 1;
     }
 
-    slots[0] = new BoardSlot(x2, y2);
-    slots[1] = new BoardSlot(x2 + xIncrement, y2 + yIncrement);
-    slots[2] = new BoardSlot(x2 + (xIncrement * 2), y2 + (yIncrement * 2));
-    slots[3] = new BoardSlot(x2 + (xIncrement * 3), y2 + (yIncrement * 3));
+    slots[0] = new Point(row2, col2);
+    slots[1] = new Point(row2 + rowInc, col2 + colInc);
+    slots[2] = new Point(row2 + (rowInc * 2), col2 + (colInc * 2));
+    slots[3] = new Point(row2 + (rowInc * 3), col2 + (colInc * 3));
     
     return slots;
   }

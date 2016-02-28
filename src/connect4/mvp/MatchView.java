@@ -21,15 +21,15 @@ package connect4.mvp;
  * @author fabio.epifani
  */
 public interface MatchView {
-  public void show(MatchModel model);
+  public void newMatch(MatchModel model);
   
-  public void setCurrentPlayerId(int currentPlayerId);
+  public void setCurrentPlayer(int currentPlayer);
   
-  public void makeMove(int player, int x, int y);
+  public void makeMove(int player, Point point);
   
-  public void disableColumn(int x);
+  public void disableColumn(int column);
   
   public void endMatch();
   
-  public void endMatch(int winner, BoardSlot[] slots);
+  public void endMatch(int winner, Point[] connected);
 }

@@ -23,11 +23,18 @@ package connect4.mvp;
 public class PlayerHuman implements Player {
   private final String name = "You";
   
+  @Override
   public String getName() {
     return this.name;
   }
   
+  @Override
   public boolean isAI() {
     return false;
+  }
+
+  @Override
+  public void makeMove(MatchPresenter controller, MatchModel model) {
+    // Human player will actually make a move. Nothing else to do.
   }
 }

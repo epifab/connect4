@@ -21,26 +21,24 @@ package connect4.mvp;
  * @author fabio.epifani
  */
 public class MatchModel {
-  public final Player player1;
-  public final Player player2;
-  public int currentPlayerId;
-  public final int columns;
-  public final int rows;
-  public final int[][] board;
-  
-  public MatchModel(Player player1, Player player2) {
-    this(player1, player2, 7, 6);
+  public enum Status {
+    Active,
+    Tie,
+    Winner
   }
+  public final String player1;
+  public final String player2;
+  public int currentPlayer;
+  public final Board board;
+  public Status status;
+  public Point[] connected;
+  public int winner;
   
-  public MatchModel(Player player1, Player player2, int columns, int rows) {
+  public MatchModel(String player1, String player2, int rows, int columns) {
     this.player1 = player1;
     this.player2 = player2;
-    this.currentPlayerId = 1;
-    this.columns = columns;
-    this.rows = rows;
-    this.board = new int[columns][rows];
-    for (int x = 0; x < columns; x++) {
-      this.board[x] = new int[rows];
-    }
+    this.currentPlayer = 1;
+    this.board = new Board(rows, columns);
+    this.status = Status.Active;
   }
 }
