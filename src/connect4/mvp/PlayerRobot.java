@@ -36,6 +36,5 @@ public class PlayerRobot implements Player {
   @Override
   public void makeMove(MatchPresenter match, MatchModel model) {
     // AI logic here...
-    
   }
 }
