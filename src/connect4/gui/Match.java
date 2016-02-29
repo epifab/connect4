@@ -64,9 +64,7 @@ public class Match extends javax.swing.JFrame implements MatchView {
 
   public Match() {
     super.setTitle("Connect 4");
-
     this.presenter = new MatchPresenter(this);
-    this.presenter.init(true);
   }
 
   public void open() {
@@ -84,6 +82,7 @@ public class Match extends javax.swing.JFrame implements MatchView {
 
     playerIco = player == 1 ? this.iPiece1 : this.iPiece2;
     this.board[point.row][point.column].setIcon(playerIco);
+    this.repaint();
   }
 
   @Override
@@ -134,10 +133,9 @@ public class Match extends javax.swing.JFrame implements MatchView {
 
     winnerIco = player == 1 ? iPiece1Winner : iPiece2Winner;
 
-    this.board[connected[0].row][connected[0].column].setIcon(winnerIco);
-    this.board[connected[1].row][connected[1].column].setIcon(winnerIco);
-    this.board[connected[2].row][connected[2].column].setIcon(winnerIco);
-    this.board[connected[3].row][connected[3].column].setIcon(winnerIco);
+    for (int i = 0; i < connected.length; i++) {
+      this.board[connected[i].row][connected[i].column].setIcon(winnerIco);
+    }
 
     if (player == 1) {
       this.lblPlayer1Name.setIcon(iPiece1WinnerSmall);

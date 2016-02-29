@@ -22,6 +22,4 @@ package connect4.mvp;
  */
 public interface Player {
   public String getName();
-  public boolean isAI();
-  public void makeMove(MatchPresenter controller, MatchModel model);
 }
