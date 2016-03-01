@@ -24,58 +24,57 @@ import java.util.Random;
  * @author fabio.epifani
  */
 public class PlayerRobot implements Player {
-  private final String name = "Hal";
+	/**
+	 * The score given to a state that leads to a win.
+	 */
+	static final float WIN_REVENUE = 1f;
+
+	/**
+	 * The score given to a state that leads to a loss.
+	 */
+	static final float LOSE_REVENUE = -1f;
+
+	/**
+	 * The score given to a state that lead neither to a win nor a loss.
+	 */
+	static final float UNCERTAIN_REVENUE = 0f;
+
+  private final String name;
+  private final int maxDepth;
+  private final Random random;
+  
+  public PlayerRobot() {
+    this("Hal", 8);
+  }
+  
+  public PlayerRobot(String name, int maxDepth) {
+    this.name = name;
+    this.maxDepth = maxDepth;
+    this.random = new Random();
+  }
   
   @Override
   public String getName() {
     return this.name;
   }
 
-	/**
-	 * The AI does think MAX_DEPTH moves ahead.
-	 */
-	static final int MAX_DEPTH = 8;
-
-	/**
-	 * The score given to a state that leads to a
-	 * win.
-	 */
-	static final float WIN_REVENUE = 1f;
-
-	/**
-	 * The score given to a state that leads to a
-	 * lose.
-	 */
-	static final float LOSE_REVENUE = -1f;
-
-	/**
-	 * The score given to a state that leads to a
-	 * loss in the next turn
-	 */
-	static final float UNCERTAIN_REVENUE = 0f;
-
-	/**
-	 * Makes a turn.
-	 * 
-	 * @return The column where the turn was made.
-	 *         Please note that the turn was
-	 *         already made and doesn't have to be
-	 *         done again.
-	 */
+  /**
+   * Gets the best move.
+   * @param match Match
+   * @return 0-based column index
+   */
 	public int getBestMove(MatchModel match) {
 		double maxValue = 2. * Integer.MIN_VALUE;
     ArrayList<Integer> moves = new ArrayList();
 
-		// Search all columns for the one that has
-		// the best value
+		// Search all columns for the one that has the best value.
 		// The best score possible is WIN_REVENUE.
-		// So if we find a move that has this
-		// score, the search can be stopped.
+		// So if we find a move that has this score, the search can be stopped.
 		for (int col = 0; col < match.board.columns; col++) {
       try {
         match.makeMove(col);
         
-        double value = this.alphabeta(match, MAX_DEPTH, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
+        double value = this.alphabeta(match, this.maxDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
         
         match.undoMove();
         
@@ -97,14 +96,13 @@ public class PlayerRobot implements Player {
       }
 		}
     
-    Random random = new Random();
-    return moves.get(random.nextInt(moves.size()));
+    // moves contains a list of the best moves. A random one will be taken
+    return moves.get(this.random.nextInt(moves.size()));
 	}
 
 	double alphabeta(MatchModel match, int depth, double alpha, double beta, boolean maximizingPlayer) {
 		boolean hasWinner = match.status == MatchModel.Status.Winner;
-		// All these conditions lead to a
-		// termination of the recursion
+		// All these conditions lead to a termination of the recursion
 		if (depth == 0 || hasWinner) {
 			double score = 0;
 			if (hasWinner) {
@@ -115,7 +113,7 @@ public class PlayerRobot implements Player {
 				score = UNCERTAIN_REVENUE;
 			}
 
-			return score / (MAX_DEPTH - depth + 1);
+			return score / (this.maxDepth - depth + 1);
 		}
 
 		if (maximizingPlayer) {

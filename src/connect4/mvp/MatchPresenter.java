@@ -37,7 +37,11 @@ public class MatchPresenter {
     this.player1 = player1;
     this.player2 = player2;
     this.model = new MatchModel(player1.getName(), player2.getName(), this.ROWS, this.COLUMNS);
+  }
+  
+  public void init() {
     this.view.newMatch(model);
+    
     if (player1 instanceof PlayerRobot) {
       PlayerRobot player = (PlayerRobot)player1;
       this.makeMove(player.getBestMove(model));

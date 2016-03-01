@@ -65,6 +65,7 @@ public class Match extends javax.swing.JFrame implements MatchView {
   public Match() {
     super.setTitle("Connect 4");
     this.presenter = new MatchPresenter(this);
+    this.presenter.init();
   }
 
   public void open() {
