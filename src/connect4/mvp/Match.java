@@ -22,7 +22,13 @@ import java.util.Stack;
  *
  * @author fabio.epifani
  */
-public class MatchModel {
+public class Match {
+  class MoveException extends RuntimeException { }
+  
+  class FullColumnException extends MoveException { }
+  
+  class MatchClosedException extends MoveException { }
+  
   public enum Status {
     Active,
     Tie,
@@ -30,21 +36,37 @@ public class MatchModel {
   }
   public final String player1;
   public final String player2;
-  public int currentPlayer;
   public final Board board;
-  public Status status;
-  public Point[] connected;
-  public int winner;
+  private int currentPlayer;
+  private Status status;
+  private Point[] connected;
+  private int winner;
   private final Stack<Point> moves;
   private final int connect_number = 4;
   
-  public MatchModel(String player1, String player2, int rows, int columns) {
+  public Match(String player1, String player2, int rows, int columns) {
     this.player1 = player1;
     this.player2 = player2;
-    this.currentPlayer = 1;
     this.board = new Board(rows, columns);
+    this.currentPlayer = 1;
     this.status = Status.Active;
     this.moves = new Stack();
+  }
+  
+  public int getCurrentPlayer() {
+    return this.currentPlayer;
+  }
+  
+  public Status getStatus() {
+    return this.status;
+  }
+  
+  public Point[] getConnected() {
+    return this.connected;
+  }
+  
+  public int getWinner() {
+    return this.winner;
   }
   
   /**
@@ -54,12 +76,12 @@ public class MatchModel {
    */
   int makeMove(int col) {
     if (this.status != Status.Active) {
-      throw new IllegalArgumentException("The match is over");
+      throw new MatchClosedException();
     }
     
     int row = this.getNextFreeSlot(col);
     if (row == -1) {
-      throw new IllegalArgumentException("Column is full");    
+      throw new FullColumnException();
     }
     
     this.makeMove(row, col);
@@ -78,12 +100,12 @@ public class MatchModel {
     this.connected = this.getConnected(row, col);
     
     if (this.connected != null) {
-      this.status = MatchModel.Status.Winner;
+      this.status = Match.Status.Winner;
       this.winner = this.board.get(this.connected[0]);
     }
     
     else if (this.isTie()) {
-      this.status = MatchModel.Status.Tie;
+      this.status = Match.Status.Tie;
     }
     
     this.currentPlayer = this.currentPlayer == 1 ? 2 : 1;
@@ -97,7 +119,7 @@ public class MatchModel {
   void undoMove() {
     Point move = this.moves.pop();
     this.board.set(move.row, move.column, 0);
-    this.status = MatchModel.Status.Active;
+    this.status = Match.Status.Active;
     this.winner = 0;
     this.connected = null;
     this.currentPlayer = this.currentPlayer == 1 ? 2 : 1;
@@ -122,7 +144,7 @@ public class MatchModel {
    * @return True if no more cells are available
    */
   private boolean isTie() {
-    for (int column = 0; column < this.board.rows; column++) {
+    for (int column = 0; column < this.board.columns; column++) {
       if (this.board.get(this.board.rows - 1, column) == 0) {
         return false;
       }

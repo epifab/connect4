@@ -24,6 +24,12 @@ import java.util.Random;
  * @author fabio.epifani
  */
 public class PlayerRobot implements Player {
+  public enum Difficulty {
+    Easy,
+    Medium,
+    Hard
+  }
+  
 	/**
 	 * The score given to a state that leads to a win.
 	 */
@@ -44,28 +50,39 @@ public class PlayerRobot implements Player {
   private final Random random;
   
   public PlayerRobot() {
-    this("Hal", 8);
+    this("Hal", Difficulty.Medium);
   }
   
-  public PlayerRobot(String name, int maxDepth) {
+  public PlayerRobot(String name, Difficulty difficulty) {
     this.name = name;
-    this.maxDepth = maxDepth;
     this.random = new Random();
+    switch (difficulty) {
+      case Easy:
+        this.maxDepth = 4;
+        break;
+      case Medium:
+        this.maxDepth = 6;
+        break;
+      default:
+        // going deeper than 8 might take a ridiculous time
+        this.maxDepth = 8;
+        break;
+    }
   }
   
   @Override
   public String getName() {
     return this.name;
   }
-
+  
   /**
    * Gets the best move.
    * @param match Match
    * @return 0-based column index
    */
-	public int getBestMove(MatchModel match) {
+	public int getBestMove(Match match) {
 		double maxValue = 2. * Integer.MIN_VALUE;
-    ArrayList<Integer> moves = new ArrayList();
+    ArrayList<Integer> bestMoves = new ArrayList();
 
 		// Search all columns for the one that has the best value.
 		// The best score possible is WIN_REVENUE.
@@ -79,8 +96,8 @@ public class PlayerRobot implements Player {
         match.undoMove();
         
         if (value > maxValue) {
-          moves.clear();
-          moves.add(col);
+          bestMoves.clear();
+          bestMoves.add(col);
  					maxValue = value;
 					if (value == WIN_REVENUE) {
 						break;
@@ -88,7 +105,7 @@ public class PlayerRobot implements Player {
         }
         
         else if (value == maxValue) {
-          moves.add(col);
+          bestMoves.add(col);
         }
       }
       catch (Exception ex) {
@@ -97,17 +114,19 @@ public class PlayerRobot implements Player {
 		}
     
     // moves contains a list of the best moves. A random one will be taken
-    return moves.get(this.random.nextInt(moves.size()));
+    return bestMoves.get(this.random.nextInt(bestMoves.size()));
 	}
 
-	double alphabeta(MatchModel match, int depth, double alpha, double beta, boolean maximizingPlayer) {
-		boolean hasWinner = match.status == MatchModel.Status.Winner;
+	double alphabeta(Match match, int depth, double alpha, double beta, boolean maximize) {
+		boolean hasWinner = match.getStatus() == Match.Status.Winner;
+    
 		// All these conditions lead to a termination of the recursion
 		if (depth == 0 || hasWinner) {
 			double score = 0;
+      
 			if (hasWinner) {
-        // If maximizingPlayer is false, then the robot won
-				score = maximizingPlayer ? LOSE_REVENUE : WIN_REVENUE;
+        // If maximize is false, then the robot won
+				score = maximize ? LOSE_REVENUE : WIN_REVENUE;
 			}
       else {
 				score = UNCERTAIN_REVENUE;
@@ -116,59 +135,33 @@ public class PlayerRobot implements Player {
 			return score / (this.maxDepth - depth + 1);
 		}
 
-		if (maximizingPlayer) {
-			for (int col = 0; col < match.board.columns; col++) {
-        try {
-          match.makeMove(col);
-          
-          alpha =
-					        Math.max(
-					                alpha,
-					                alphabeta(
-                                  match,
-					                        depth - 1,
-					                        alpha,
-					                        beta,
-					                        false));
-					
-          match.undoMove();
-					
-          if (beta <= alpha) {
-						break;
-					}
+  	for (int col = 0; col < match.board.columns; col++) {
+      try {
+        match.makeMove(col);
+        
+        double alphabeta = this.alphabeta(match, depth - 1, alpha, beta, !maximize);
+        
+      	if (maximize) {
+          // Maximize the revenues
+          alpha = Math.max(alpha, alphabeta);
         }
-        catch (Exception ex) {
-          // Ignore column
+        
+        else {
+          // Minimize the loss
+					beta = Math.min(beta, alphabeta);
         }
-			}
-			return alpha;
-		}
-    else {
-			for (int col = 0; col < match.board.columns; col++) {
-        try {
-          match.makeMove(col);
-          
-					beta =
-					        Math.min(
-					                beta,
-					                alphabeta(
-                                  match,
-					                        depth - 1,
-					                        alpha,
-					                        beta,
-					                        true));
 
-          match.undoMove();
-          
-          if (beta <= alpha) {
-						break;
-					}
-        }
-        catch (Exception ex) {
-          // Ignore column
+        match.undoMove();
+        
+        if (beta <= alpha) {
+          break;
         }
 			}
-			return beta;
+      catch (Match.FullColumnException ex) {
+        // Column is full.
+      }
 		}
+
+    return maximize ? alpha : beta;
 	}
 }

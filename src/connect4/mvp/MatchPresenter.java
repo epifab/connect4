@@ -21,7 +21,7 @@ package connect4.mvp;
  * @author fabio.epifani
  */
 public class MatchPresenter {
-  final MatchModel model;
+  final Match model;
   final MatchView view;
   private final int ROWS = 7;
   private final int COLUMNS = 8;
@@ -36,7 +36,7 @@ public class MatchPresenter {
     this.view = view;
     this.player1 = player1;
     this.player2 = player2;
-    this.model = new MatchModel(player1.getName(), player2.getName(), this.ROWS, this.COLUMNS);
+    this.model = new Match(player1.getName(), player2.getName(), this.ROWS, this.COLUMNS);
   }
   
   public void init() {
@@ -53,20 +53,20 @@ public class MatchPresenter {
    * @param col 0-based column index
    */
   public void makeMove(int col) {
-    int currentPlayer = this.model.currentPlayer;
+    int currentPlayer = this.model.getCurrentPlayer();
 
     int row = this.model.makeMove(col);
     
     this.view.makeMove(currentPlayer, new Point(row, col));
     
-    switch (this.model.status) {
+    switch (this.model.getStatus()) {
       case Active:
         if (row == this.model.board.rows - 1) {
           this.view.disableColumn(col);
         }
-        this.view.setCurrentPlayer(this.model.currentPlayer);
+        this.view.setCurrentPlayer(this.model.getCurrentPlayer());
         
-        Player player = this.model.currentPlayer == 1 ? this.player1 : this.player2;
+        Player player = this.model.getCurrentPlayer() == 1 ? this.player1 : this.player2;
         
         if (player instanceof PlayerRobot) {
           PlayerRobot robot = (PlayerRobot)player;
@@ -81,7 +81,7 @@ public class MatchPresenter {
         break;
         
       case Winner:
-        this.view.endMatch(this.model.winner, this.model.connected);
+        this.view.endMatch(this.model.getWinner(), this.model.getConnected());
         break;
     }    
   }

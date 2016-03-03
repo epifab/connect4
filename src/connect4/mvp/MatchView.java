@@ -21,7 +21,7 @@ package connect4.mvp;
  * @author fabio.epifani
  */
 public interface MatchView {
-  public void newMatch(MatchModel model);
+  public void newMatch(Match model);
   
   public void setCurrentPlayer(int currentPlayer);
   
