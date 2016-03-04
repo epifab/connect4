@@ -19,10 +19,11 @@ package connect4.mvp;
 import java.util.Stack;
 
 /**
- *
+ * Model
+ * 
  * @author fabio.epifani
  */
-public class Match {
+public class MatchModel {
   class MoveException extends RuntimeException { }
   
   class FullColumnException extends MoveException { }
@@ -34,27 +35,32 @@ public class Match {
     Tie,
     Winner
   }
-  public final String player1;
-  public final String player2;
+  
+  public final Player player1;
+  public final Player player2;
   public final Board board;
-  private int currentPlayer;
+  private int currentPlayerId;
   private Status status;
   private Point[] connected;
-  private int winner;
+  private int winnerId;
   private final Stack<Point> moves;
-  private final int connect_number = 4;
+  private final int CONNECT_NUMBER = 4;
   
-  public Match(String player1, String player2, int rows, int columns) {
+  public MatchModel(Player player1, Player player2, int rows, int columns) {
     this.player1 = player1;
     this.player2 = player2;
     this.board = new Board(rows, columns);
-    this.currentPlayer = 1;
+    this.currentPlayerId = 1;
     this.status = Status.Active;
     this.moves = new Stack();
   }
   
-  public int getCurrentPlayer() {
-    return this.currentPlayer;
+  public int getCurrentPlayerId() {
+    return this.currentPlayerId;
+  }
+  
+  public Player getCurrentPlayer() {
+    return this.currentPlayerId == 1 ? this.player1 : this.player2;
   }
   
   public Status getStatus() {
@@ -66,7 +72,7 @@ public class Match {
   }
   
   public int getWinner() {
-    return this.winner;
+    return this.winnerId;
   }
   
   /**
@@ -94,21 +100,21 @@ public class Match {
    * @param col 0-based column index
    */
   private void makeMove(int row, int col) {
-    this.board.set(row, col, this.currentPlayer);
+    this.board.set(row, col, this.currentPlayerId);
 
     // Winner detection
     this.connected = this.getConnected(row, col);
     
     if (this.connected != null) {
-      this.status = Match.Status.Winner;
-      this.winner = this.board.get(this.connected[0]);
+      this.status = MatchModel.Status.Winner;
+      this.winnerId = this.board.get(this.connected[0]);
     }
     
     else if (this.isTie()) {
-      this.status = Match.Status.Tie;
+      this.status = MatchModel.Status.Tie;
     }
     
-    this.currentPlayer = this.currentPlayer == 1 ? 2 : 1;
+    this.currentPlayerId = this.currentPlayerId == 1 ? 2 : 1;
     
     this.moves.add(new Point(row, col));
   }
@@ -119,10 +125,10 @@ public class Match {
   void undoMove() {
     Point move = this.moves.pop();
     this.board.set(move.row, move.column, 0);
-    this.status = Match.Status.Active;
-    this.winner = 0;
+    this.status = MatchModel.Status.Active;
+    this.winnerId = 0;
     this.connected = null;
-    this.currentPlayer = this.currentPlayer == 1 ? 2 : 1;
+    this.currentPlayerId = this.currentPlayerId == 1 ? 2 : 1;
   }
   
   /**
@@ -179,8 +185,8 @@ public class Match {
     }
 
     n = 0;
-    minRow = row - this.connect_number - 1;  // starting point
-    maxRow = row + this.connect_number - 1;  // arriving point
+    minRow = row - this.CONNECT_NUMBER - 1;  // starting point
+    maxRow = row + this.CONNECT_NUMBER - 1;  // arriving point
 
     if (minRow < 0) {
       minRow = 0;
@@ -193,7 +199,7 @@ public class Match {
     for (i = minRow; i <= row; i++) {
       if (this.board.get(i, col) != playerId) {
         // Checks whether it's still possible to close the match
-        if (maxRow - i < this.connect_number) {
+        if (maxRow - i < this.CONNECT_NUMBER) {
           break;
         }
 
@@ -205,7 +211,7 @@ public class Match {
         if (n == 1) {
           winRowStart = i;
         }
-        else if (n == this.connect_number) {
+        else if (n == this.CONNECT_NUMBER) {
           winRowStop = i;
           detected = true;
           break;
@@ -219,8 +225,8 @@ public class Match {
 
     // Search for an horizontal "4 in a line"
     n = 0;
-    minCol = col - this.connect_number - 1;
-    maxCol = col + this.connect_number - 1;
+    minCol = col - this.CONNECT_NUMBER - 1;
+    maxCol = col + this.CONNECT_NUMBER - 1;
 
     if (minCol < 0) {
       minCol = 0;
@@ -232,7 +238,7 @@ public class Match {
     for (i = minCol; i <= maxCol; i++) {
       if (this.board.get(row, i) != playerId) {
         // Checks whether it's still possible to close the match
-        if (maxCol - i < this.connect_number) {
+        if (maxCol - i < this.CONNECT_NUMBER) {
           break;
         }
 
@@ -243,7 +249,7 @@ public class Match {
         if (n == 1) {
           winColStart = i;
         }
-        else if (n == this.connect_number) {
+        else if (n == this.CONNECT_NUMBER) {
           winColStop = i;
           detected = true;
           break;
@@ -280,7 +286,7 @@ public class Match {
      * 0 | o | o | x | X | o |   |
      *   +---+---+---+---+---+---+
      */
-    if (tlCorner + brCorner >= this.connect_number - 1) {
+    if (tlCorner + brCorner >= this.CONNECT_NUMBER - 1) {
       minCol = col - tlCorner;
       minRow = row + tlCorner;
 
@@ -293,7 +299,7 @@ public class Match {
             winRowStart = minRow - i;
             winColStart = minCol + i;
           }
-          else if (n == this.connect_number) {
+          else if (n == this.CONNECT_NUMBER) {
             winRowStop = minRow - i;
             winColStop = minCol + i;
             detected = true;
@@ -302,7 +308,7 @@ public class Match {
         }
         else {
           n = 0;
-          if (tlCorner + brCorner - i < this.connect_number) {
+          if (tlCorner + brCorner - i < this.CONNECT_NUMBER) {
             break;
           }
         }
@@ -325,7 +331,7 @@ public class Match {
      * 0 | O | o | x | x | o |   |
      *   +---+---+---+---+---+---+
      */
-    if (trCorner + blCorner >= this.connect_number - 1) {
+    if (trCorner + blCorner >= this.CONNECT_NUMBER - 1) {
       // aggiorno i valori di minCol e minRow
       minCol = col - blCorner;
       minRow = row - blCorner;
@@ -339,7 +345,7 @@ public class Match {
             winColStart = minCol + i;
             winRowStart = minRow + i;
           }
-          else if (n == this.connect_number) {
+          else if (n == this.CONNECT_NUMBER) {
             winColStop = minCol + i;
             winRowStop = minRow + i;
             detected = true;
@@ -347,7 +353,7 @@ public class Match {
           }
         } else {
           n = 0;
-          if (trCorner + blCorner - i < this.connect_number) {
+          if (trCorner + blCorner - i < this.CONNECT_NUMBER) {
             break;
           }
         }
@@ -369,7 +375,7 @@ public class Match {
    * @return Array of connected points
    */
   private Point[] createConnected(int row1, int col1, int row2, int col2) {
-    Point[] connected = new Point[this.connect_number];
+    Point[] connected = new Point[this.CONNECT_NUMBER];
 
     int colInc = 0;
     
@@ -389,7 +395,7 @@ public class Match {
       rowInc = 1;
     }
 
-    for (int i = 0; i < this.connect_number; i++) {
+    for (int i = 0; i < this.CONNECT_NUMBER; i++) {
       connected[i] = new Point(row2 + (rowInc * i), col2 + (colInc * i));
     }
     

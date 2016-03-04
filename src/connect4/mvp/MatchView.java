@@ -17,11 +17,12 @@
 package connect4.mvp;
 
 /**
- *
+ * View
+ * 
  * @author fabio.epifani
  */
 public interface MatchView {
-  public void newMatch(Match model);
+  public void newMatch(String player1, String player2, int rows, int columns);
   
   public void setCurrentPlayer(int currentPlayer);
   

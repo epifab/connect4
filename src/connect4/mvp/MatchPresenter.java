@@ -17,30 +17,37 @@
 package connect4.mvp;
 
 /**
- * Match presenter. Handles model and view.
+ * Presenter
+ * 
  * @author fabio.epifani
  */
 public class MatchPresenter {
-  final Match model;
-  final MatchView view;
+  private MatchModel model;
+  private final MatchView view;
   private final int ROWS = 7;
   private final int COLUMNS = 8;
-  private final Player player1;
-  private final Player player2;
+  private Player player1;
+  private Player player2;
 
   public MatchPresenter(MatchView view) {
-    this(view, new PlayerHuman(), new PlayerRobot());
-  }
-  
-  public MatchPresenter(MatchView view, Player player1, Player player2) {
     this.view = view;
-    this.player1 = player1;
-    this.player2 = player2;
-    this.model = new Match(player1.getName(), player2.getName(), this.ROWS, this.COLUMNS);
   }
   
-  public void init() {
-    this.view.newMatch(model);
+  public void newMatch() {
+    this.newMatch(new PlayerHuman(), new PlayerRobot(), ROWS, COLUMNS);
+  }
+  
+  /**
+   * initialises a new match.
+   * @param player1 Player 1
+   * @param player2 Player 2
+   * @param rows Number of rows
+   * @param columns Number of columns
+   */
+  public void newMatch(Player player1, Player player2, int rows, int columns) {
+    this.model = new MatchModel(player1, player2, rows, columns);
+
+    this.view.newMatch(player1.getName(), player2.getName(), rows, columns);
     
     if (player1 instanceof PlayerRobot) {
       PlayerRobot player = (PlayerRobot)player1;
@@ -53,25 +60,24 @@ public class MatchPresenter {
    * @param col 0-based column index
    */
   public void makeMove(int col) {
-    int currentPlayer = this.model.getCurrentPlayer();
+    int currentPlayerId = this.model.getCurrentPlayerId();
 
     int row = this.model.makeMove(col);
     
-    this.view.makeMove(currentPlayer, new Point(row, col));
+    this.view.makeMove(currentPlayerId, new Point(row, col));
     
     switch (this.model.getStatus()) {
       case Active:
         if (row == this.model.board.rows - 1) {
           this.view.disableColumn(col);
         }
-        this.view.setCurrentPlayer(this.model.getCurrentPlayer());
+        this.view.setCurrentPlayer(this.model.getCurrentPlayerId());
         
-        Player player = this.model.getCurrentPlayer() == 1 ? this.player1 : this.player2;
+        Player player = this.model.getCurrentPlayer();
         
         if (player instanceof PlayerRobot) {
           PlayerRobot robot = (PlayerRobot)player;
-          int robotMove = robot.getBestMove(this.model);
-          this.makeMove(robotMove);
+          this.makeMove(robot.getBestMove(this.model));
         }
         
         break;

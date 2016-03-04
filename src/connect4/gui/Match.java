@@ -21,6 +21,7 @@ import connect4.mvp.MatchPresenter;
 import connect4.mvp.MatchView;
 import java.awt.EventQueue;
 import javax.swing.GroupLayout;
+import javax.swing.JButton;
 
 public class Match extends javax.swing.JFrame implements MatchView {
 
@@ -55,15 +56,16 @@ public class Match extends javax.swing.JFrame implements MatchView {
   protected javax.swing.Icon iPiece2;
   protected javax.swing.Icon iPiece1Winner;
   protected javax.swing.Icon iPiece2Winner;
+  protected javax.swing.Icon iCmdOn;
+  protected javax.swing.Icon iCmdOff;
+  protected javax.swing.Icon iCmd;
 
   protected javax.swing.JLabel[][] board;
   protected javax.swing.JButton[] commands;
 
-  protected javax.swing.JPanel matchInfoPanel;
+  protected javax.swing.JPanel matchInfo;
   protected javax.swing.JLabel lblPlayer1;
-  protected javax.swing.JLabel lblPlayer1Name;
   protected javax.swing.JLabel lblPlayer2;
-  protected javax.swing.JLabel lblPlayer2Name;
 
   protected javax.swing.JMenuBar menuBar;
 
@@ -79,8 +81,25 @@ public class Match extends javax.swing.JFrame implements MatchView {
 
   public Match() {
     super.setTitle("Connect 4");
+    
+    // Loads images
+    iPiece1WinnerSmall = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE1_WINNER_SMALL));
+    iPiece2WinnerSmall = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE2_WINNER_SMALL));
+    iPiece0Small = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE0_SMALL));
+    iPiece1Small = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE1_SMALL));
+    iPiece2Small = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE2_SMALL));
+    iPieceDis = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE_DIS));
+    iPiece0 = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE0));
+    iPiece1 = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE1));
+    iPiece2 = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE2));
+    iPiece1Winner = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE1_WINNER));
+    iPiece2Winner = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE2_WINNER));
+    iCmdOn = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_CMDON));
+    iCmdOff = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_CMDOFF));
+    iCmd = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_CMD));
+    
     this.presenter = new MatchPresenter(this);
-    this.presenter.init();
+    this.presenter.newMatch();
   }
 
   public void open() {
@@ -105,31 +124,6 @@ public class Match extends javax.swing.JFrame implements MatchView {
   }
 
   @Override
-  public void newMatch(connect4.mvp.Match model) {
-    this.initComponents(model);
-    
-    this.lblPlayer1Name.setText(model.player1);
-    this.lblPlayer2Name.setText(model.player2);
-    
-    if (model.getCurrentPlayer() == 1) {
-      this.lblPlayer1Name.setIcon(iPiece1Small);
-      this.lblPlayer2Name.setIcon(iPiece0Small);
-    }
-    else {
-      this.lblPlayer1Name.setIcon(iPiece0Small);
-      this.lblPlayer2Name.setIcon(iPiece2Small);
-    }
-
-    for (int column = 0; column < model.board.columns; column++) {
-      this.commands[column].setEnabled(true);
-
-      for (int row = 0; row < model.board.rows; row++) {
-        this.board[row][column].setIcon(iPiece0);
-      }
-    }
-  }
-
-  @Override
   public void disableColumn(int x) {
     this.commands[x].setEnabled(false);
   }
@@ -137,12 +131,12 @@ public class Match extends javax.swing.JFrame implements MatchView {
   @Override
   public void setCurrentPlayer(int player) {
     if (player == 1) {
-      lblPlayer1Name.setIcon(iPiece1Small);
-      lblPlayer2Name.setIcon(iPiece0Small);
+      lblPlayer1.setIcon(iPiece1Small);
+      lblPlayer2.setIcon(iPiece0Small);
     }
     else {
-      lblPlayer1Name.setIcon(iPiece0Small);
-      lblPlayer2Name.setIcon(iPiece2Small);
+      lblPlayer1.setIcon(iPiece0Small);
+      lblPlayer2.setIcon(iPiece2Small);
     }
   }
 
@@ -157,12 +151,12 @@ public class Match extends javax.swing.JFrame implements MatchView {
     }
 
     if (player == 1) {
-      this.lblPlayer1Name.setIcon(iPiece1WinnerSmall);
-      this.lblPlayer2Name.setIcon(iPiece0Small);
+      this.lblPlayer1.setIcon(iPiece1WinnerSmall);
+      this.lblPlayer2.setIcon(iPiece0Small);
     }
     else {
-      this.lblPlayer1Name.setIcon(iPiece0Small);
-      this.lblPlayer2Name.setIcon(iPiece2WinnerSmall);
+      this.lblPlayer1.setIcon(iPiece0Small);
+      this.lblPlayer2.setIcon(iPiece2WinnerSmall);
     }
 
     this.finish();
@@ -170,62 +164,38 @@ public class Match extends javax.swing.JFrame implements MatchView {
 
   @Override
   public void endMatch() {
-    this.lblPlayer1Name.setIcon(iPiece0Small);
-    this.lblPlayer2Name.setIcon(iPiece0Small);
+    this.lblPlayer1.setIcon(iPiece0Small);
+    this.lblPlayer2.setIcon(iPiece0Small);
     this.finish();
   }
 
   protected void finish() {
-    for (int i = 0; i < this.commands.length; i++) {
-      this.commands[i].setEnabled(false);
+    for (JButton command : this.commands) {
+      command.setEnabled(false);
     }
   }
 
-  protected void commandClick(java.awt.event.ActionEvent evt) {
-    EventQueue.invokeLater(new CommandEvent(this.presenter, Integer.parseInt(evt.getActionCommand())));
-  }
-
-  protected void actionNew() {
-    this.close();
-    Match newMatch = new Match();
-    newMatch.open();
-  }
-
-  protected void actionQuit() {
-    this.close();
-  }
-
-  protected void initComponents(connect4.mvp.Match model) {
+  @Override
+  public void newMatch(String player1, String player2, int rows, int columns) {
     int i, j;
 
-    javax.swing.Icon iCmdOn = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_CMDON));
-    javax.swing.Icon iCmdOff = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_CMDOFF));
-    javax.swing.Icon iCmd = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_CMD));
-
-    board = new javax.swing.JLabel[model.board.rows][model.board.columns];
-    commands = new javax.swing.JButton[model.board.columns];
+    board = new javax.swing.JLabel[rows][columns];
+    commands = new javax.swing.JButton[columns];
 
     gridPanel = new javax.swing.JPanel();
     cmdPanel = new javax.swing.JPanel();
-    matchInfoPanel = new javax.swing.JPanel();
+    matchInfo = new javax.swing.JPanel();
 
-    lblPlayer1Name = new javax.swing.JLabel();
-    lblPlayer2Name = new javax.swing.JLabel();
+    lblPlayer1 = new javax.swing.JLabel();
+    lblPlayer2 = new javax.swing.JLabel();
+    
+    lblPlayer1.setIcon(iPiece1Small);
+    lblPlayer1.setText(player1);
 
-    // inizializzo le icone
-    iPiece1WinnerSmall = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE1_WINNER_SMALL));
-    iPiece2WinnerSmall = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE2_WINNER_SMALL));
-    iPiece0Small = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE0_SMALL));
-    iPiece1Small = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE1_SMALL));
-    iPiece2Small = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE2_SMALL));
-    iPieceDis = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE_DIS));
-    iPiece0 = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE0));
-    iPiece1 = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE1));
-    iPiece2 = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE2));
-    iPiece1Winner = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE1_WINNER));
-    iPiece2Winner = new javax.swing.ImageIcon(getClass().getResource(GUIConst.SRC_PIECE2_WINNER));
+    lblPlayer2.setIcon(iPiece0Small);
+    lblPlayer2.setText(player2);
 
-    for (j = 0; j < model.board.columns; j++) {
+    for (j = 0; j < commands.length; j++) {
       commands[j] = new javax.swing.JButton();
       commands[j].setIcon(iCmd);
       commands[j].setDisabledIcon(iCmdOff);
@@ -236,12 +206,11 @@ public class Match extends javax.swing.JFrame implements MatchView {
       commands[j].addActionListener(new java.awt.event.ActionListener() {
         @Override
         public void actionPerformed(java.awt.event.ActionEvent evt) {
-          commandClick(evt);
+          EventQueue.invokeLater(new CommandEvent(presenter, Integer.parseInt(evt.getActionCommand())));
         }
       });
-      commands[j].setEnabled(false);
 
-      for (i = 0; i < model.board.rows; i++) {
+      for (i = 0; i < rows; i++) {
         board[i][j] = new javax.swing.JLabel();
         board[i][j].setIcon(iPieceDis);
       }
@@ -253,45 +222,43 @@ public class Match extends javax.swing.JFrame implements MatchView {
 
     gridPanel.setBackground(GUIConst.COLOR_GRID);
     cmdPanel.setBackground(new java.awt.Color(250, 250, 250));
-    matchInfoPanel.setBackground(GUIConst.COLOR_BG_MATCH_INFO);
+    matchInfo.setBackground(GUIConst.COLOR_BG_MATCH_INFO);
 
     javax.swing.GroupLayout gridPanelLayout = new javax.swing.GroupLayout(gridPanel);
     javax.swing.GroupLayout cmdPanelLayout = new javax.swing.GroupLayout(cmdPanel);
-    javax.swing.GroupLayout matchInfoPanelLayout = new javax.swing.GroupLayout(matchInfoPanel);
+    javax.swing.GroupLayout matchInfoPanelLayout = new javax.swing.GroupLayout(matchInfo);
 
     gridPanel.setLayout(gridPanelLayout);
     cmdPanel.setLayout(cmdPanelLayout);
-    matchInfoPanel.setLayout(matchInfoPanelLayout);
+    matchInfo.setLayout(matchInfoPanelLayout);
 
-    lblPlayer1Name.setIcon(iPiece0Small);
-    lblPlayer1Name.setFont(new java.awt.Font("Tahoma", 1, 30));
-    lblPlayer1Name.setForeground(new java.awt.Color(255, 0, 0));
+    lblPlayer1.setIcon(iPiece0Small);
+    lblPlayer1.setFont(new java.awt.Font("Tahoma", 1, 30));
+    lblPlayer1.setForeground(new java.awt.Color(255, 0, 0));
 
-    lblPlayer2Name.setIcon(iPiece0Small);
-    lblPlayer2Name.setFont(new java.awt.Font("Tahoma", 1, 30)); // NOI18N
-    lblPlayer2Name.setForeground(new java.awt.Color(255, 255, 0));
+    lblPlayer2.setIcon(iPiece0Small);
+    lblPlayer2.setFont(new java.awt.Font("Tahoma", 1, 30)); // NOI18N
+    lblPlayer2.setForeground(new java.awt.Color(255, 255, 0));
 
-    matchInfoPanelLayout.setHorizontalGroup(
-            matchInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+    matchInfoPanelLayout.setHorizontalGroup(matchInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(matchInfoPanelLayout.createSequentialGroup()
                     .addContainerGap()
                     .addGroup(matchInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(matchInfoPanelLayout.createSequentialGroup()
-                                    .addComponent(lblPlayer1Name, javax.swing.GroupLayout.PREFERRED_SIZE, BUTTON_WIDTH / 2 * model.board.columns, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(lblPlayer1, javax.swing.GroupLayout.PREFERRED_SIZE, BUTTON_WIDTH / 2 * columns, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(lblPlayer2Name, javax.swing.GroupLayout.PREFERRED_SIZE, BUTTON_WIDTH / 2 * model.board.columns, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                    .addComponent(lblPlayer2, javax.swing.GroupLayout.PREFERRED_SIZE, BUTTON_WIDTH / 2 * columns, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addContainerGap(37, Short.MAX_VALUE))
     );
-    matchInfoPanelLayout.setVerticalGroup(
-            matchInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+    matchInfoPanelLayout.setVerticalGroup(matchInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
             .addGroup(matchInfoPanelLayout.createSequentialGroup()
                     .addGroup(matchInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(lblPlayer1Name, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblPlayer2Name, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(lblPlayer1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblPlayer2, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)))
     );
 
     GroupLayout.SequentialGroup cmdGroupHorizontal = cmdPanelLayout.createSequentialGroup();    
-    for (int col = 0; col < model.board.columns; col++) {
+    for (int col = 0; col < columns; col++) {
       if (col > 0) {
         cmdGroupHorizontal.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED);
       }
@@ -308,7 +275,7 @@ public class Match extends javax.swing.JFrame implements MatchView {
     );
 
     GroupLayout.ParallelGroup cmdGroupVertical = cmdPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE);
-    for (int col = 0; col < model.board.columns; col++) {
+    for (int col = 0; col < columns; col++) {
       cmdGroupVertical.addComponent(commands[col], BUTTON_HEIGHT, BUTTON_HEIGHT, BUTTON_HEIGHT);
     }
     
@@ -322,10 +289,10 @@ public class Match extends javax.swing.JFrame implements MatchView {
 
     GroupLayout.ParallelGroup boardGroupParallel = gridPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING);
         
-    for (int row = model.board.rows - 1; row >= 0; row--) {
+    for (int row = rows - 1; row >= 0; row--) {
       GroupLayout.SequentialGroup rowGroup = gridPanelLayout.createSequentialGroup();
 
-      for (int col = 0; col < model.board.columns; col++) {
+      for (int col = 0; col < columns; col++) {
         if (col > 0) {
           rowGroup.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED);
         }
@@ -347,10 +314,10 @@ public class Match extends javax.swing.JFrame implements MatchView {
     
     boardGroupSequential.addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE);
     
-    for (int row = model.board.rows - 1; row >= 0; row--) {
+    for (int row = rows - 1; row >= 0; row--) {
       GroupLayout.ParallelGroup rowGroup = gridPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE);
       
-      for (int col = 0; col < model.board.columns; col++) {
+      for (int col = 0; col < columns; col++) {
         rowGroup.addComponent(board[row][col]);
       }
       
@@ -379,7 +346,7 @@ public class Match extends javax.swing.JFrame implements MatchView {
     menuItemNew.addActionListener(new java.awt.event.ActionListener() {
       @Override
       public void actionPerformed(java.awt.event.ActionEvent evt) {
-        actionNew();
+        presenter.newMatch();
       }
     });
     menuMatch.add(menuItemNew);
@@ -389,7 +356,7 @@ public class Match extends javax.swing.JFrame implements MatchView {
     menuItemExit.addActionListener(new java.awt.event.ActionListener() {
       @Override
       public void actionPerformed(java.awt.event.ActionEvent evt) {
-        actionQuit();
+        close();
       }
     });
     menuMatch.add(menuItemExit);
@@ -397,14 +364,15 @@ public class Match extends javax.swing.JFrame implements MatchView {
     menuBar.add(menuMatch);
 
     setJMenuBar(menuBar);
+    
+    getContentPane().removeAll();
 
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
     getContentPane().setLayout(layout);
-    layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+    layout.setHorizontalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(matchInfoPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(matchInfo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addContainerGap())
             .addGroup(layout.createSequentialGroup()
                     .addContainerGap()
@@ -415,11 +383,10 @@ public class Match extends javax.swing.JFrame implements MatchView {
                     .addComponent(gridPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addContainerGap())
     );
-    layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+    layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(matchInfoPanel, javax.swing.GroupLayout.PREFERRED_SIZE, BUTTON_HEIGHT + 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(matchInfo, javax.swing.GroupLayout.PREFERRED_SIZE, BUTTON_HEIGHT + 20, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cmdPanel, javax.swing.GroupLayout.PREFERRED_SIZE, BUTTON_HEIGHT + 20, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(gridPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))

@@ -21,6 +21,7 @@ import java.util.Random;
 
 /**
  *
+ * 
  * @author fabio.epifani
  */
 public class PlayerRobot implements Player {
@@ -77,10 +78,10 @@ public class PlayerRobot implements Player {
   
   /**
    * Gets the best move.
-   * @param match Match
+   * @param match MatchModel
    * @return 0-based column index
    */
-	public int getBestMove(Match match) {
+	public int getBestMove(MatchModel match) {
 		double maxValue = 2. * Integer.MIN_VALUE;
     ArrayList<Integer> bestMoves = new ArrayList();
 
@@ -117,8 +118,8 @@ public class PlayerRobot implements Player {
     return bestMoves.get(this.random.nextInt(bestMoves.size()));
 	}
 
-	double alphabeta(Match match, int depth, double alpha, double beta, boolean maximize) {
-		boolean hasWinner = match.getStatus() == Match.Status.Winner;
+	double alphabeta(MatchModel match, int depth, double alpha, double beta, boolean maximize) {
+		boolean hasWinner = match.getStatus() == MatchModel.Status.Winner;
     
 		// All these conditions lead to a termination of the recursion
 		if (depth == 0 || hasWinner) {
@@ -157,7 +158,7 @@ public class PlayerRobot implements Player {
           break;
         }
 			}
-      catch (Match.FullColumnException ex) {
+      catch (MatchModel.FullColumnException ex) {
         // Column is full.
       }
 		}
